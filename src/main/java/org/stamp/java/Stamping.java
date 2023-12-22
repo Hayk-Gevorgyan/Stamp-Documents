@@ -1,7 +1,6 @@
 package org.stamp.java;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.io.RandomAccessStreamCache;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -12,23 +11,20 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Stamping {
-    private static void stampPDF(File inputFile, File outputFile) throws IOException {
-        PDDocument document = Loader.loadPDF(inputFile);
+    private static void stampPDF(PDDocument document, File outputFile) throws IOException {
+
         PDImageXObject stampImage = PDImageXObject.createFromFile(StampBuilder.STAMP, document);
         PDPage lastPage = document.getPages().get(document.getNumberOfPages() - 1);
-        PDPageContentStream contentStream = new PDPageContentStream(document, lastPage, PDPageContentStream.AppendMode.OVERWRITE, false);
+
+        PDPageContentStream contentStream = new PDPageContentStream(document, lastPage, PDPageContentStream.AppendMode.APPEND, false);
 
         float x = lastPage.getMediaBox().getLowerLeftX() + 20;
         float y = lastPage.getMediaBox().getLowerLeftY() + 20;
 
         contentStream.drawImage(stampImage, x, y);
         contentStream.close();
-        try {
-            document.save(outputFile);
-            document.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        document.save(outputFile);
     }
 
     public static void stamp() {
@@ -67,7 +63,7 @@ public class Stamping {
                 break;
             }
             try {
-                stampPDF(inputFile, outputFile);
+                stampPDF(Loader.loadPDF(inputFile), outputFile);
                 System.out.println("file " + outputFile.getName() + " stamped and saved at " + outputFile.getParentFile().getName() + " successfully");
             } catch (IOException e) {
                 System.out.println("Couldn't save the file");
